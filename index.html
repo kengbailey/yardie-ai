@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yardie AI | Jamaican AI Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-900': '#0a0a0a',
+                        'dark-800': '#121212',
+                        'dark-700': '#1a1a1a',
+                        'primary': '#6366f1',
+                        'primary-light': '#818cf8',
+                        'primary-dark': '#4f46e5',
+                        'accent': '#8b5cf6',
+                        'accent-light': '#a78bfa',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'mono': ['Fira Code', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        body {
+            background-color: #0a0a0a;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            background: #1a1a1a;
+        }
+        
+        .card {
+            background: rgba(40, 40, 40, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-icon {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .terminal {
+            background: #0f172a;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            overflow: hidden;
+        }
+        
+        .terminal-header {
+            background: #1e293b;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .terminal-body {
+            padding: 20px;
+            background: #0f172a;
+        }
+        
+        .terminal-line {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .terminal-prompt {
+            color: #818cf8;
+        }
+        
+        .terminal-command {
+            color: #60a5fa;
+        }
+        
+        .terminal-output {
+            color: #c7d2fe;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+        }
+        
+        .form-input {
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        
+        .ai-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+        
+        .chat-bubble {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 18px;
+            max-width: 80%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .chat-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            border-top-color: rgba(99, 102, 241, 0.3);
+            border-bottom: 0;
+            margin-bottom: -10px;
+        }
+        
+        .chat-bubble.user {
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            max-width: 80%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            margin-left: auto;
+        }
+        
+        .chat-bubble.user::after {
+            border-top-color: rgba(255, 255, 255, 0.08);
+            right: 20px;
+            left: auto;
+        }
+        
+        .animate-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header Section -->
+    <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-left">
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+                    <span class="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Yardie</span>
+                    <span class="text-white">AI</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 max-w-2xl">
+                    Intelligent AI solutions crafted for the Jamaican community. Empowering Caribbean innovation with cutting-edge technology.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 animate-in">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Powerful Capabilities</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Our AI chatbots are designed to handle complex conversations and deliver exceptional user experiences
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card p-8 rounded-2xl animate-in delay-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-language text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Natural Language Processing</h3>
+                    <p class="text-gray-300">
+                        Understand context, intent, and emotions with advanced NLP models that learn from every conversation.
+                    </p>
+                </div>
+                
+                <div class="card p-8 rounded-2xl animate-in delay-200">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Real-time Responses</h3>
+                    <p class="text-gray-300">
+                        Instant, contextually relevant replies that keep conversations flowing naturally with sub-100ms latency.
+                    </p>
+                </div>
+                
+                <div class="card p-8 rounded-2xl animate-in delay-300">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Multi-bot Collaboration</h3>
+                    <p class="text-gray-300">
+                        Orchestrate multiple specialized AI agents working together to solve complex user queries.
+                    </p>
+                </div>
+                
+                <div class="card p-8 rounded-2xl animate-in delay-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Behavioral Analytics</h3>
+                    <p class="text-gray-300">
+                        Gain insights into user behavior and conversation patterns to optimize your AI strategies.
+                    </p>
+                </div>
+                
+                <div class="card p-8 rounded-2xl animate-in delay-200">
+                    <div class="feature-icon">
+                        <i class="fas fa-plug text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Seamless Integrations</h3>
+                    <p class="text-gray-300">
+                        Connect with your existing tools and platforms through our extensive API ecosystem.
+                    </p>
+                </div>
+                
+                <div class="card p-8 rounded-2xl animate-in delay-300">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Enterprise Security</h3>
+                    <p class="text-gray-300">
+                        Military-grade encryption and compliance with global data protection regulations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="card p-12 rounded-3xl relative overflow-hidden animate-in">
+                <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl"></div>
+                <div class="relative z-10">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                        Join the Waiting List
+                    </h2>
+                    <p class="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+                        Be the first to experience Yardie AI when we launch. Get early access and exclusive updates.
+                    </p>
+
+                    <div class="max-w-md mx-auto">
+                        <form class="space-y-6">
+                            <div>
+                                <input type="email" placeholder="Your Email Address" class="w-full form-input rounded-xl px-6 py-4" required>
+                            </div>
+                            <button type="submit" class="w-full px-8 py-4 rounded-xl btn-primary font-medium text-lg">
+                                Join Waiting List
+                            </button>
+                            <p class="text-gray-400 text-sm mt-4">
+                                We'll send you updates about our launch. No spam, unsubscribe anytime.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Simple animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.animate-in').forEach(el => {
+                observer.observe(el);
+            });
+            
+            // Form submission
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Thank you for your interest! We will contact you shortly.');
+                    form.reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
