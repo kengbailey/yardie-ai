@@ -141,6 +141,13 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
         }
         
+        .form-input:disabled {
+            background: rgba(20, 20, 20, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+        }
+        
         .ai-avatar {
             width: 120px;
             height: 120px;
@@ -205,6 +212,37 @@
         .delay-200 { animation-delay: 0.2s; }
         .delay-300 { animation-delay: 0.3s; }
         .delay-400 { animation-delay: 0.4s; }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            transform: none;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .success-message {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .success-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -318,6 +356,10 @@
                             <button type="submit" class="w-full px-8 py-4 rounded-xl btn-primary font-medium text-lg">
                                 Join Waiting List
                             </button>
+                            <div class="success-message">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Thanks! We'll be in touch soon.
+                            </div>
                             <p class="text-gray-400 text-sm mt-4">
                                 We'll send you updates about our launch. No spam, unsubscribe anytime.
                             </p>
@@ -345,6 +387,10 @@
             
             // Form submission
             const form = document.querySelector('form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const successMessage = form.querySelector('.success-message');
+            const emailInput = form.querySelector('input[name="email"]');
+            
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -353,6 +399,10 @@
                     const email = formData.get('email');
                     
                     if (email) {
+                        // Disable button during submission
+                        submitButton.disabled = true;
+                        submitButton.textContent = 'Submitting...';
+                        
                         fetch('/submit-email', {
                             method: 'POST',
                             headers: {
@@ -363,14 +413,32 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                alert('Thank you for your interest! We will contact you shortly.');
-                                form.reset();
+                                // Change button to success state
+                                submitButton.textContent = '✓ Added to List!';
+                                submitButton.classList.remove('btn-primary');
+                                submitButton.classList.add('btn-success');
+                                
+                                // Show success message
+                                successMessage.classList.add('show');
+                                
+                                // Clear and disable the email input
+                                emailInput.value = '';
+                                emailInput.disabled = true;
+                                
+                                // Keep button disabled to prevent duplicate submissions
+                                submitButton.disabled = true;
                             } else {
+                                // Reset button on error
+                                submitButton.disabled = false;
+                                submitButton.textContent = 'Join Waiting List';
                                 alert('There was an error submitting your email. Please try again.');
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
+                            // Reset button on error
+                            submitButton.disabled = false;
+                            submitButton.textContent = 'Join Waiting List';
                             alert('There was an error submitting your email. Please try again.');
                         });
                     }
