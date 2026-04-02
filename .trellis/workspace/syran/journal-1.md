@@ -62,3 +62,35 @@ Migrated the Yardie AI landing page from static HTML + Python to a Next.js 15 fu
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Fix CI Docker build
+
+**Date**: 2026-04-02
+**Task**: Fix CI Docker build
+
+### Summary
+
+Removed COPY public from Dockerfile — empty public/ dir not tracked by git was failing the CI build.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c692292` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
