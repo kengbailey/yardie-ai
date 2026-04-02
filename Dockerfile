@@ -1,39 +1,40 @@
-FROM nginx:alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Install Python and supervisor
-RUN apk add --no-cache python3 py3-pip supervisor
+# Install build tools for better-sqlite3 native addon
+RUN apk add --no-cache python3 make g++
 
-# Create app directory
 WORKDIR /app
 
-# Copy application files
-COPY index.html /usr/share/nginx/html/
-COPY email_logger.py /app/
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copy package files
+COPY package.json package-lock.json* ./
 
-# Create log directories
-RUN mkdir -p /var/log/nginx /var/log
+# Install dependencies
+RUN npm ci
 
-# Make email_logger.py executable
-RUN chmod +x /app/email_logger.py
+# Copy source
+COPY . .
 
-# Create nginx config to proxy API requests
-RUN echo 'server { \
-    listen 80; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html; \
-        try_files $uri $uri/ =404; \
-    } \
-    location /submit-email { \
-        proxy_pass http://localhost:3000; \
-        proxy_set_header Host $host; \
-        proxy_set_header X-Real-IP $remote_addr; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Build Next.js
+RUN npm run build
 
-# Expose port 80
-EXPOSE 80
+# Stage 2: Production
+FROM node:20-alpine AS runner
 
-# Start supervisor to manage both services
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV DB_PATH=/data/emails.db
+
+# Create data directory for SQLite
+RUN mkdir -p /data
+
+# Copy standalone output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

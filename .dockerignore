@@ -1,1 +1,12 @@
-old/
+node_modules
+.next
+.git
+.github
+.trellis
+.claude
+openspec
+AGENTS.md
+*.md
+!README.md
+data/
+emails.db
