@@ -158,17 +158,15 @@ export const auth = betterAuth({
   },
 
   // ---------------------------------------------------------------------------
-  // Database hooks (placeholder for provisioning pipeline)
+  // Database hooks
   // ---------------------------------------------------------------------------
+  // Note: Provisioning (OpenWebUI account, LiteLLM key, welcome email) is
+  // triggered by the assign-to-instance endpoint (POST /api/admin/users/assign),
+  // NOT by user signup. Signup only creates the portal account.
   databaseHooks: {
     user: {
       create: {
         after: async (user) => {
-          // TODO: Phase 1 -- trigger provisioning pipeline
-          // When a user is created and assigned to an instance, we will:
-          //   1. Create OpenWebUI account
-          //   2. Create LiteLLM virtual key
-          //   3. Send welcome email
           console.info(
             JSON.stringify({
               level: "info",

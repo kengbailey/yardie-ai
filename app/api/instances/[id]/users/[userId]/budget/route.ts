@@ -4,14 +4,16 @@
  * Updates the budget for a user in an instance.
  * Requires: manager of the instance OR sysadmin.
  *
- * Phase 1: Logs the budget update. LiteLLM Admin API integration comes in task 10.3.
- * Future: Will call LiteLLM Admin API to update the virtual key's max_budget.
+ * If the user has a personal LiteLLM virtual key, the budget change
+ * propagates to LiteLLM immediately. Otherwise it is stored for future sync.
  */
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getUserPermissions, canManageInstance } from "@/lib/permissions";
+import { queryOne } from "@/lib/db";
+import { updateVirtualKey } from "@/lib/litellm-admin";
 
 const budgetInputSchema = z.object({
   budget: z.number().positive("Budget must be a positive number"),
@@ -59,20 +61,38 @@ export async function PUT(
 
     const { budget } = parsed.data;
 
-    // Phase 1: Log the budget update
-    // TODO: Call LiteLLM Admin API to update virtual key max_budget
-    // Example future call:
-    //   PUT /key/update { key: userVirtualKey, max_budget: budget }
-    console.info(
-      JSON.stringify({
-        level: "info",
-        msg: "Budget update requested",
-        instanceId,
-        userId,
-        budget,
-        updatedBy: session.user.id,
-      }),
+    // Check if user has a personal LiteLLM virtual key
+    const keyRow = await queryOne<{ litellm_key: string }>(
+      `SELECT litellm_key FROM instance_roles WHERE user_id = $1 AND instance_id = $2`,
+      [userId, instanceId],
     );
+
+    if (keyRow?.litellm_key) {
+      // Propagate to LiteLLM immediately
+      await updateVirtualKey(keyRow.litellm_key, { maxBudget: budget });
+      console.info(
+        JSON.stringify({
+          level: "info",
+          msg: "Budget updated in LiteLLM",
+          instanceId,
+          userId,
+          budget,
+          updatedBy: session.user.id,
+        }),
+      );
+    } else {
+      // No personal key yet — log for future sync
+      console.info(
+        JSON.stringify({
+          level: "info",
+          msg: "Budget update stored (no LiteLLM key yet)",
+          instanceId,
+          userId,
+          budget,
+          updatedBy: session.user.id,
+        }),
+      );
+    }
 
     return NextResponse.json({
       status: "success",

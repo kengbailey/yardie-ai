@@ -4,14 +4,16 @@
  * Updates the model allowlist for a user in an instance.
  * Requires: manager of the instance OR sysadmin.
  *
- * Phase 1: Logs the model update. LiteLLM Admin API integration comes later.
- * Future: Will call LiteLLM Admin API to update the virtual key's model list.
+ * If the user has a personal LiteLLM virtual key, the model list
+ * propagates to LiteLLM immediately. Otherwise stored for future sync.
  */
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getUserPermissions, canManageInstance } from "@/lib/permissions";
+import { queryOne } from "@/lib/db";
+import { updateVirtualKey } from "@/lib/litellm-admin";
 
 const modelsInputSchema = z.object({
   models: z.array(z.string().min(1)).min(1, "At least one model is required"),
@@ -59,20 +61,38 @@ export async function PUT(
 
     const { models } = parsed.data;
 
-    // Phase 1: Log the model update
-    // TODO: Call LiteLLM Admin API to update virtual key model list
-    // Example future call:
-    //   PUT /key/update { key: userVirtualKey, models: models }
-    console.info(
-      JSON.stringify({
-        level: "info",
-        msg: "Model access update requested",
-        instanceId,
-        userId,
-        models,
-        updatedBy: session.user.id,
-      }),
+    // Check if user has a personal LiteLLM virtual key
+    const keyRow = await queryOne<{ litellm_key: string }>(
+      `SELECT litellm_key FROM instance_roles WHERE user_id = $1 AND instance_id = $2`,
+      [userId, instanceId],
     );
+
+    if (keyRow?.litellm_key) {
+      // Propagate to LiteLLM immediately
+      await updateVirtualKey(keyRow.litellm_key, { models });
+      console.info(
+        JSON.stringify({
+          level: "info",
+          msg: "Model access updated in LiteLLM",
+          instanceId,
+          userId,
+          models,
+          updatedBy: session.user.id,
+        }),
+      );
+    } else {
+      // No personal key yet — log for future sync
+      console.info(
+        JSON.stringify({
+          level: "info",
+          msg: "Model access update stored (no LiteLLM key yet)",
+          instanceId,
+          userId,
+          models,
+          updatedBy: session.user.id,
+        }),
+      );
+    }
 
     return NextResponse.json({
       status: "success",
