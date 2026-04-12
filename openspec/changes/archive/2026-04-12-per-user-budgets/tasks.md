@@ -24,4 +24,4 @@
 
 - [x] 6.1 Chat in OpenWebUI, verify spend logs show email-only in end_user column
 - [x] 6.2 Check dashboard shows per-user budget from end_user record
-- [ ] 6.3 Commit and push
+- [x] 6.3 Commit and push
