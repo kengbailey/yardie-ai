@@ -26,13 +26,11 @@ const __dirname = dirname(__filename);
 interface CliArgs {
   url: string;
   key: string;
-  instanceId: string;
 }
 
 function parseArgs(argv: string[]): CliArgs {
   let url = "";
   let key = "";
-  let instanceId = "";
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -43,21 +41,18 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--key" && next) {
       key = next;
       i++;
-    } else if (arg === "--instance" && next) {
-      instanceId = next;
-      i++;
     }
   }
 
-  if (!url || !key || !instanceId) {
+  if (!url || !key) {
     console.error(
-      "Usage: npx tsx scripts/deploy-function.ts --url <instance-url> --key <admin-api-key> --instance <instance-id>",
+      "Usage: npx tsx scripts/deploy-function.ts --url <instance-url> --key <admin-api-key>",
     );
     process.exit(1);
   }
 
   url = url.replace(/\/+$/, "");
-  return { url, key, instanceId };
+  return { url, key };
 }
 
 // ---------------------------------------------------------------------------
@@ -72,7 +67,7 @@ const FUNCTION_NAME = "User Attribution Filter";
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  const { url, key, instanceId } = parseArgs(process.argv.slice(2));
+  const { url, key } = parseArgs(process.argv.slice(2));
 
   const functionPath = resolve(
     __dirname,
@@ -140,21 +135,6 @@ async function main(): Promise<void> {
     console.error("  WARNING: Failed to toggle function global.");
   } else {
     console.info("  Toggled global.");
-  }
-
-  // Step 5: Set valves (instance_id)
-  const valvesResponse = await fetch(
-    `${url}/api/v1/functions/id/${FUNCTION_ID}/valves/update`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ priority: 0, instance_id: instanceId }),
-    },
-  );
-  if (!valvesResponse.ok) {
-    console.error("  WARNING: Failed to set valves.");
-  } else {
-    console.info(`  Valves set: instance_id="${instanceId}".`);
   }
 
   console.info("Done.");

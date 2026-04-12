@@ -4,8 +4,7 @@
  * Updates the budget for a user in an instance.
  * Requires: manager of the instance OR sysadmin.
  *
- * If the user has a personal LiteLLM virtual key, the budget change
- * propagates to LiteLLM immediately. Otherwise it is stored for future sync.
+ * Calls LiteLLM end_user update API with the user's email.
  */
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
@@ -13,7 +12,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getUserPermissions, canManageInstance } from "@/lib/permissions";
 import { queryOne } from "@/lib/db";
-import { updateVirtualKey } from "@/lib/litellm-admin";
+import { updateEndUser } from "@/lib/litellm-admin";
 
 const budgetInputSchema = z.object({
   budget: z.number().positive("Budget must be a positive number"),
@@ -61,37 +60,43 @@ export async function PUT(
 
     const { budget } = parsed.data;
 
-    // Check if user has a personal LiteLLM virtual key
-    const keyRow = await queryOne<{ litellm_key: string }>(
-      `SELECT litellm_key FROM instance_roles WHERE user_id = $1 AND instance_id = $2`,
-      [userId, instanceId],
+    // Look up user's email to use as LiteLLM end_user ID
+    const userRow = await queryOne<{ email: string }>(
+      `SELECT email FROM "user" WHERE id = $1`,
+      [userId],
     );
 
-    if (keyRow?.litellm_key) {
-      // Propagate to LiteLLM immediately
-      await updateVirtualKey(keyRow.litellm_key, { maxBudget: budget });
+    if (!userRow) {
+      return NextResponse.json(
+        { status: "error", message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    try {
+      await updateEndUser(userRow.email, { maxBudget: budget });
       console.info(
         JSON.stringify({
           level: "info",
-          msg: "Budget updated in LiteLLM",
+          msg: "Budget updated via LiteLLM end_user API",
           instanceId,
           userId,
+          email: userRow.email,
           budget,
           updatedBy: session.user.id,
         }),
       );
-    } else {
-      // No personal key yet — log for future sync
-      console.info(
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error(
         JSON.stringify({
-          level: "info",
-          msg: "Budget update stored (no LiteLLM key yet)",
-          instanceId,
-          userId,
-          budget,
-          updatedBy: session.user.id,
+          level: "error",
+          msg: "Failed to update LiteLLM end_user budget",
+          email: userRow.email,
+          error: errMsg,
         }),
       );
+      // Still return success — budget will be enforced once end_user exists
     }
 
     return NextResponse.json({

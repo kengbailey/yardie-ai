@@ -18,7 +18,7 @@
 import { randomBytes } from "node:crypto";
 
 import { pool } from "@/lib/db";
-import { createVirtualKey, LiteLLMAdminError } from "@/lib/litellm-admin";
+import { createEndUser, LiteLLMAdminError } from "@/lib/litellm-admin";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -157,27 +157,18 @@ interface LiteLLMKeyResult {
 }
 
 /**
- * Create a LiteLLM virtual key for a user with default budget.
+ * Create a LiteLLM end_user record for per-user budget enforcement.
+ * Uses the user's email as the end_user ID (matches the filter function).
  *
- * POST ${LITELLM_BASE_URL}/key/generate
- * Body: { models: [], max_budget: 1.0, user_id, metadata: { email, instance_id } }
+ * POST ${LITELLM_BASE_URL}/end_user/new
  */
-export async function createLiteLLMVirtualKey(
+export async function createLiteLLMEndUser(
   user: UserRow,
-  instanceId: string,
-): Promise<LiteLLMKeyResult> {
-  const result = await createVirtualKey({
-    userId: user.id,
-    models: [],
+): Promise<void> {
+  await createEndUser({
+    userId: user.email,
     maxBudget: DEFAULT_BUDGET_USD,
-    metadata: {
-      email: user.email,
-      instance_id: instanceId,
-    },
-    keyAlias: `${user.email}-${instanceId}`,
   });
-
-  return { key: result.key };
 }
 
 // ---------------------------------------------------------------------------
@@ -331,11 +322,11 @@ export async function provisionUser(
     }
   }
 
-  // Step 2: Create LiteLLM virtual key
+  // Step 2: Create LiteLLM end_user for per-user budget enforcement
   if (!completedTypes.has("create_litellm_key")) {
     await updateTaskStatus(userId, instanceId, "create_litellm_key", "in_progress");
     try {
-      await createLiteLLMVirtualKey(user, instanceId);
+      await createLiteLLMEndUser(user);
       await updateTaskStatus(userId, instanceId, "create_litellm_key", "completed");
     } catch (error) {
       const message =

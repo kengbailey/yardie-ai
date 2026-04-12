@@ -2,10 +2,8 @@
  * Usage statistics from LiteLLM.
  *
  * Queries LiteLLM_SpendLogs for per-user token usage and spend.
- * User attribution is encoded in the `end_user` column as:
- *   {user_id}::{user_email}::{instance_id}
- *
- * Budget info comes from the LiteLLM Admin API (key info).
+ * User attribution uses email in the `end_user` column.
+ * Budget info comes from LiteLLM_EndUserTable.
  */
 import { litellmQuery } from "@/lib/litellm-db";
 
@@ -29,7 +27,7 @@ interface SpendRow {
   total_spend: string;
 }
 
-interface KeySpendRow {
+interface EndUserRow {
   [key: string]: unknown;
   spend: number;
   max_budget: number | null;
@@ -37,21 +35,17 @@ interface KeySpendRow {
 
 /**
  * Get usage statistics for a user in the current month.
- *
- * Matches on email (part 2 of end_user) because the portal user_id and
- * OpenWebUI user_id are different — email is the shared identifier.
+ * Matches on email in spend logs (handles both old composite and new email-only format).
+ * Budget comes from LiteLLM_EndUserTable keyed by email.
  */
 export async function getUserUsageStats(
   _userId: string,
   email: string,
 ): Promise<UsageStats> {
-  // Query LiteLLM_SpendLogs for this user's monthly usage
-  // end_user format: "{openwebui_user_id}::{email}::{instance_id}"
-  // Match on email (part 2) since portal and OpenWebUI user IDs differ
   let tokensUsed = 0;
   let conversationCount = 0;
-  let totalSpend = 0;
 
+  // Query spend logs — match on email (handles both "email" and "id::email::instance" formats)
   try {
     const rows = await litellmQuery<SpendRow>(
       `SELECT
@@ -59,7 +53,7 @@ export async function getUserUsageStats(
         COUNT(*) as request_count,
         COALESCE(SUM(spend), 0) as total_spend
       FROM "LiteLLM_SpendLogs"
-      WHERE SPLIT_PART(end_user, '::', 2) = $1
+      WHERE (end_user = $1 OR SPLIT_PART(end_user, '::', 2) = $1)
         AND "startTime" >= date_trunc('month', CURRENT_TIMESTAMP)`,
       [email],
     );
@@ -67,74 +61,36 @@ export async function getUserUsageStats(
     if (rows[0]) {
       tokensUsed = Number(rows[0].tokens_used);
       conversationCount = Number(rows[0].request_count);
-      totalSpend = Number(rows[0].total_spend);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      JSON.stringify({
-        level: "error",
-        msg: "Failed to query LiteLLM usage stats",
-        email,
-        error: message,
-      }),
+      JSON.stringify({ level: "error", msg: "Failed to query usage stats", email, error: message }),
     );
   }
 
-  // Get budget from LiteLLM key info API
+  // Query end_user record for budget
   let budgetTotal = 1.0;
   let budgetRemaining = 1.0;
 
   try {
-    const LITELLM_BASE_URL =
-      process.env.LITELLM_BASE_URL ?? "http://litellm:4000";
-    const LITELLM_MASTER_KEY = process.env.LITELLM_MASTER_KEY ?? "";
-
-    // Query all keys and find the one associated with this user's instance
-    // For now, get the first non-master key's budget as a proxy
-    const keyRows = await litellmQuery<KeySpendRow>(
-      `SELECT spend, max_budget
-       FROM "LiteLLM_VerificationToken"
-       WHERE max_budget IS NOT NULL
-       ORDER BY created_at ASC
-       LIMIT 1`,
+    const rows = await litellmQuery<EndUserRow>(
+      `SELECT eu.spend, bt.max_budget
+       FROM "LiteLLM_EndUserTable" eu
+       LEFT JOIN "LiteLLM_BudgetTable" bt ON eu.budget_id = bt.budget_id
+       WHERE eu.user_id = $1`,
+      [email],
     );
 
-    if (keyRows[0]) {
-      budgetTotal = keyRows[0].max_budget ?? 1.0;
-      // Budget remaining = total budget - this user's spend
-      budgetRemaining = Math.max(0, budgetTotal - totalSpend);
-    } else if (LITELLM_MASTER_KEY) {
-      // Fallback: try the API
-      try {
-        const response = await fetch(
-          `${LITELLM_BASE_URL}/key/info?key=sk-test-instance-key`,
-          {
-            headers: { Authorization: `Bearer ${LITELLM_MASTER_KEY}` },
-          },
-        );
-        if (response.ok) {
-          const data = (await response.json()) as {
-            info?: { spend?: number; max_budget?: number };
-          };
-          if (data.info) {
-            budgetTotal = data.info.max_budget ?? 1.0;
-            budgetRemaining = Math.max(0, budgetTotal - totalSpend);
-          }
-        }
-      } catch {
-        // API fallback failed, use defaults
-      }
+    if (rows[0]) {
+      const spend = rows[0].spend ?? 0;
+      budgetTotal = rows[0].max_budget ?? 1.0;
+      budgetRemaining = Math.max(0, budgetTotal - spend);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      JSON.stringify({
-        level: "error",
-        msg: "Failed to query LiteLLM budget info",
-        email,
-        error: message,
-      }),
+      JSON.stringify({ level: "error", msg: "Failed to query end_user budget", email, error: message }),
     );
   }
 
@@ -143,6 +99,6 @@ export async function getUserUsageStats(
     conversationCount,
     budgetTotal,
     budgetRemaining,
-    tier: "Free", // Tier system not yet implemented
+    tier: "Free",
   };
 }

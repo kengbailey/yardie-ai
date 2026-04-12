@@ -290,3 +290,96 @@ export async function getKeySpend(keyId: string): Promise<KeySpendResponse> {
 
   return parsed.data;
 }
+
+// ---------------------------------------------------------------------------
+// End User (per-user budget) management
+// ---------------------------------------------------------------------------
+
+export interface CreateEndUserParams {
+  userId: string;
+  maxBudget: number;
+  budgetDuration?: "daily" | "weekly" | "monthly";
+}
+
+export interface UpdateEndUserParams {
+  maxBudget?: number;
+  blocked?: boolean;
+  budgetDuration?: "daily" | "weekly" | "monthly";
+}
+
+export interface EndUserInfo {
+  user_id: string;
+  spend: number;
+  max_budget: number | null;
+  budget_duration: string | null;
+  blocked: boolean;
+}
+
+/**
+ * Create a LiteLLM end_user with a budget.
+ * POST /end_user/new
+ */
+export async function createEndUser(
+  params: CreateEndUserParams,
+): Promise<EndUserInfo> {
+  const response = await litellmFetch("/end_user/new", {
+    method: "POST",
+    body: JSON.stringify({
+      user_id: params.userId,
+      max_budget: params.maxBudget,
+      budget_duration: params.budgetDuration ?? "monthly",
+    }),
+  });
+
+  return (await response.json()) as EndUserInfo;
+}
+
+/**
+ * Update a LiteLLM end_user's budget or blocked status.
+ * POST /end_user/update
+ */
+export async function updateEndUser(
+  userId: string,
+  params: UpdateEndUserParams,
+): Promise<EndUserInfo> {
+  const body: Record<string, unknown> = { user_id: userId };
+  if (params.maxBudget !== undefined) body.max_budget = params.maxBudget;
+  if (params.blocked !== undefined) body.blocked = params.blocked;
+  if (params.budgetDuration !== undefined) body.budget_duration = params.budgetDuration;
+
+  const response = await litellmFetch("/end_user/update", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  return (await response.json()) as EndUserInfo;
+}
+
+/**
+ * Get info about a LiteLLM end_user.
+ * GET /end_user/info
+ */
+export async function getEndUserInfo(
+  userId: string,
+): Promise<EndUserInfo | null> {
+  try {
+    const response = await litellmFetch(
+      `/end_user/info?end_user_id=${encodeURIComponent(userId)}`,
+      { method: "GET" },
+    );
+    return (await response.json()) as EndUserInfo;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete a LiteLLM end_user.
+ * POST /end_user/delete
+ */
+export async function deleteEndUser(userId: string): Promise<void> {
+  await litellmFetch("/end_user/delete", {
+    method: "POST",
+    body: JSON.stringify({ user_ids: [userId] }),
+  });
+}
