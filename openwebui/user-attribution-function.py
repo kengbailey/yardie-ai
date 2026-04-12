@@ -1,11 +1,15 @@
 """
 OpenWebUI Filter Function: User Attribution
 
-Injects user identity into outgoing LLM request metadata so that
-LiteLLM can attribute usage to the correct user and instance.
+Injects user identity into the `user` field of outgoing LLM requests
+so that LiteLLM can attribute usage to the correct user and instance.
 
-Deploy via admin API or admin UI on each OpenWebUI instance.
-See: scripts/deploy-function.ts for automated deployment.
+Format: {user_id}::{user_email}::{instance_id}
+
+LiteLLM captures the `user` field and stores it in the `end_user`
+column of LiteLLM_SpendLogs.
+
+Deploy via: scripts/deploy-function.ts
 """
 
 from pydantic import BaseModel
@@ -20,11 +24,10 @@ class Filter:
         self.valves = self.Valves()
 
     def inlet(self, body: dict, __user__: dict) -> dict:
-        if "metadata" not in body:
-            body["metadata"] = {}
-        body["metadata"]["user_id"] = __user__.get("id", "")
-        body["metadata"]["user_email"] = __user__.get("email", "")
-        body["metadata"]["instance_id"] = self.valves.instance_id
+        user_id = __user__.get("id", "")
+        user_email = __user__.get("email", "")
+        instance_id = self.valves.instance_id
+        body["user"] = f"{user_id}::{user_email}::{instance_id}"
         return body
 
     def outlet(self, body: dict, __user__: dict) -> dict:
