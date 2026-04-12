@@ -6,4 +6,4 @@
 
 ## 2. Commit
 
-- [ ] 2.1 Verify typecheck passes, commit and push
+- [x] 2.1 Verify typecheck passes, commit and push
