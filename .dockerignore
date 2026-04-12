@@ -5,8 +5,14 @@ node_modules
 .trellis
 .claude
 openspec
+research
 AGENTS.md
 *.md
 !README.md
-data/
-emails.db
+.env
+.env.*
+!.env.example
+postgres/
+traefik/
+litellm/
+docker-compose.yml

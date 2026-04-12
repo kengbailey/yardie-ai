@@ -142,7 +142,7 @@ const userName = profile.name;
 
 ### Database Row Results
 
-better-sqlite3 `.get()` returns `undefined` when no row is found. Always handle this.
+PostgreSQL `pool.query()` returns `result.rows` which may be empty. Always check for existence.
 
 ```typescript
 interface EmailRow {
@@ -151,7 +151,8 @@ interface EmailRow {
   submitted_at: string;
 }
 
-const row = db.prepare("SELECT * FROM emails WHERE id = ?").get(id) as EmailRow | undefined;
+const result = await pool.query<EmailRow>("SELECT * FROM emails WHERE id = $1", [id]);
+const row = result.rows[0];
 
 if (!row) {
   return NextResponse.json(

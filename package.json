@@ -7,25 +7,32 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:init": "npx tsx scripts/init-db.ts",
+    "seed:admin": "npx tsx scripts/seed-admin.ts",
+    "provisioning:worker": "npx tsx scripts/process-provisioning.ts",
+    "deploy:function": "npx tsx scripts/deploy-function.ts"
   },
   "dependencies": {
     "next": "^15.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "better-sqlite3": "^11.9.1",
+    "pg": "^8.13.1",
+    "better-auth": "^1.2.7",
+    "argon2": "^0.41.1",
     "zod": "^3.24.4",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.2.0",
     "lucide-react": "^0.503.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.11.11",
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "typescript": "^5.8.3",
     "tailwindcss": "^4.1.4",
-    "@tailwindcss/postcss": "^4.1.4"
+    "@tailwindcss/postcss": "^4.1.4",
+    "tsx": "^4.19.2"
   }
 }

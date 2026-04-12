@@ -1,6 +1,6 @@
 # Backend Development Guidelines Index
 
-> **Tech Stack**: Next.js 15 API Routes + better-sqlite3 + Zod
+> **Tech Stack**: Next.js 15 API Routes + PostgreSQL (pg) + Better Auth + Zod
 
 ## Related Guidelines
 
@@ -16,7 +16,7 @@
 | ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------- |
 | [directory-structure.md](./directory-structure.md)   | API route organization and directory layout         | Starting a new feature             |
 | [type-safety.md](./type-safety.md)                   | Zod schemas, type narrowing, response patterns     | Type-related decisions             |
-| [database.md](./database.md)                         | better-sqlite3 queries, transactions, SQL patterns | Database operations                |
+| [database.md](./database.md)                         | PostgreSQL queries, transactions, SQL patterns     | Database operations                |
 | [logging.md](./logging.md)                           | Structured console logging                         | Debugging, observability           |
 | [quality.md](./quality.md)                           | Pre-commit checklist for backend code              | Before committing                  |
 
@@ -43,7 +43,7 @@
 | Zod error handling   | [type-safety.md](./type-safety.md) |
 | Standard response    | [type-safety.md](./type-safety.md) |
 
-### Database (better-sqlite3)
+### Database (PostgreSQL)
 
 | Task                    | File                         |
 | ----------------------- | ---------------------------- |
@@ -72,7 +72,7 @@
 | **No non-null assertions `!`** - use type narrowing              | [type-safety.md](./type-safety.md)                 |
 | **All API inputs validated with Zod**                            | [type-safety.md](./type-safety.md)                 |
 | **Standard response format** - always include `success`/`reason` | [type-safety.md](./type-safety.md)                 |
-| **Use prepared statements** for repeated queries                 | [database.md](./database.md)                       |
+| **Use connection pool** for all database access                  | [database.md](./database.md)                       |
 | **Use transactions** for multi-step writes                       | [database.md](./database.md)                       |
 | **Use structured context** in logs - no string interpolation     | [logging.md](./logging.md)                         |
 | **Run pre-commit checklist** before committing                   | [quality.md](./quality.md)                         |

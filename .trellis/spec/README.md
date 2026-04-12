@@ -1,6 +1,6 @@
 # Next.js Full-Stack Development Guidelines
 
-Development guidelines for the Next.js 15 application with SQLite backend and TailwindCSS frontend.
+Development guidelines for the Next.js 15 application with PostgreSQL backend and TailwindCSS frontend.
 
 ## Structure
 
@@ -19,7 +19,7 @@ React 19 + Next.js 15 App Router frontend development patterns:
 
 ### [Backend](./backend/index.md)
 
-Next.js Route Handlers + better-sqlite3 backend development patterns:
+Next.js Route Handlers + PostgreSQL + Better Auth backend development patterns:
 
 - [Directory Structure](./backend/directory-structure.md)
 - [Database](./backend/database.md)
@@ -52,7 +52,7 @@ Common issues and solutions:
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TailwindCSS 4
-- **Backend**: Next.js API Routes (Route Handlers), better-sqlite3, Zod
+- **Backend**: Next.js API Routes (Route Handlers), PostgreSQL (pg), Better Auth, Zod
 - **Language**: TypeScript (strict mode)
 - **Styling**: TailwindCSS 4 + clsx + tailwind-merge
 - **Deployment**: Docker

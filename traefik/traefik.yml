@@ -1,0 +1,19 @@
+# Traefik v3 static configuration for local development
+# https://doc.traefik.io/traefik/
+
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: yardie-network
+
+log:
+  level: INFO

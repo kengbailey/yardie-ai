@@ -1,28 +1,56 @@
-import Database from "better-sqlite3";
-import { mkdirSync } from "fs";
-import { dirname } from "path";
+/**
+ * PostgreSQL connection pool singleton.
+ *
+ * Environment variables:
+ *   DATABASE_URL - PostgreSQL connection string
+ *     e.g. postgresql://user:password@localhost:5432/portal_db
+ */
+import { Pool } from "pg";
 
-const DB_PATH = process.env.DB_PATH || "./data/emails.db";
+const DATABASE_URL = process.env.DATABASE_URL ?? "";
 
-// Ensure data directory exists
-mkdirSync(dirname(DB_PATH), { recursive: true });
+/**
+ * Global singleton pool. In development, Next.js hot-reloads modules, so we
+ * store the pool on `globalThis` to avoid creating a new pool on every reload.
+ */
+const globalForPg = globalThis as unknown as { pgPool: Pool | undefined };
 
-const db = new Database(DB_PATH);
-db.pragma("journal_mode = WAL");
+export const pool: Pool =
+  globalForPg.pgPool ??
+  new Pool({
+    connectionString: DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS emails (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL,
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+if (process.env.NODE_ENV !== "production") {
+  globalForPg.pgPool = pool;
+}
 
-export const insertEmail = db.prepare(
-  "INSERT INTO emails (email) VALUES (?)"
-);
-export const getEmails = db.prepare(
-  "SELECT * FROM emails ORDER BY submitted_at DESC"
-);
+/**
+ * Execute a parameterized query and return all rows.
+ *
+ * Always use parameterized queries to prevent SQL injection:
+ *   query("SELECT * FROM users WHERE id = $1", [userId])
+ */
+export async function query<T extends Record<string, unknown>>(
+  text: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const result = await pool.query<T>(text, params);
+  return result.rows;
+}
 
-export default db;
+/**
+ * Execute a parameterized query and return the first row or null.
+ */
+export async function queryOne<T extends Record<string, unknown>>(
+  text: string,
+  params?: unknown[],
+): Promise<T | null> {
+  const result = await pool.query<T>(text, params);
+  return result.rows[0] ?? null;
+}
+
+export default pool;

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { insertEmail } from "@/lib/db";
+
+import { pool } from "@/lib/db";
 import { emailSubmissionSchema } from "@/lib/types";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     let body: Record<string, unknown>;
 
-    const contentType = request.headers.get("content-type") || "";
+    const contentType = request.headers.get("content-type") ?? "";
 
     if (contentType.includes("application/json")) {
       body = await request.json();
@@ -30,26 +31,35 @@ export async function POST(request: Request) {
     if (!result.success) {
       return NextResponse.json(
         { status: "error", message: "Valid email required" },
-        { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
+        { status: 400, headers: { "Access-Control-Allow-Origin": "*" } },
       );
     }
 
-    insertEmail.run(result.data.email);
+    await pool.query("INSERT INTO emails (email) VALUES ($1)", [
+      result.data.email,
+    ]);
 
     return NextResponse.json(
       { status: "success" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*" } },
     );
   } catch (error) {
-    console.error("Error processing email submission:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(
+      JSON.stringify({
+        level: "error",
+        msg: "Error processing email submission",
+        error: message,
+      }),
+    );
     return NextResponse.json(
       { status: "error", message: "Server error" },
-      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } },
     );
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(): Promise<NextResponse> {
   return new NextResponse(null, {
     status: 200,
     headers: {

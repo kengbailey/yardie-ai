@@ -60,7 +60,7 @@
 - [ ] Naming follows conventions (files: kebab-case, components: PascalCase)
 - [ ] Unused imports and dead code removed
 - [ ] No swallowed errors (silent `catch` blocks)
-- [ ] SQLite queries use parameterized statements (no string interpolation)
+- [ ] PostgreSQL queries use parameterized statements (no string interpolation)
 - [ ] Route handlers validate request body with Zod before processing
 
 ---

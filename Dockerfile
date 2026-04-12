@@ -1,9 +1,6 @@
 # Stage 1: Build
 FROM node:20-alpine AS builder
 
-# Install build tools for better-sqlite3 native addon
-RUN apk add --no-cache python3 make g++
-
 WORKDIR /app
 
 # Copy package files
@@ -15,6 +12,10 @@ RUN npm ci
 # Copy source
 COPY . .
 
+# Build-time env vars for Next.js (NEXT_PUBLIC_* must be set at build time)
+ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
 # Build Next.js
 RUN npm run build
 
@@ -25,10 +26,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DB_PATH=/data/emails.db
-
-# Create data directory for SQLite
-RUN mkdir -p /data
+ENV HOSTNAME=0.0.0.0
 
 # Copy standalone output
 COPY --from=builder /app/.next/standalone ./
