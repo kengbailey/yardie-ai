@@ -39,8 +39,8 @@ export default async function DashboardPage() {
     );
   }
 
-  // Get usage stats (placeholder data in Phase 1)
-  const usageStats = await getUserUsageStats(user.id);
+  // Get usage stats from LiteLLM
+  const usageStats = await getUserUsageStats(user.id, user.email);
 
   return (
     <main className="min-h-screen px-4 sm:px-6 lg:px-8 py-8">

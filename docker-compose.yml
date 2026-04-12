@@ -15,6 +15,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - LITELLM_BASE_URL=http://litellm:4000
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - LITELLM_DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/litellm_db
       - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-noreply@yardie.ai}
     depends_on:
       postgres:
