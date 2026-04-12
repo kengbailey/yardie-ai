@@ -11,4 +11,4 @@
 
 ## 3. Commit
 
-- [ ] 3.1 Commit and push
+- [x] 3.1 Commit and push
