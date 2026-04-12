@@ -74,14 +74,14 @@
 - [x] 10.1 Create `litellm/config.yaml` — LiteLLM configuration with OpenRouter models, PostgreSQL database URL, Redis cache
 - [x] 10.2 Create `litellm/Dockerfile` (or use official image with config mounted)
 - [x] 10.3 Configure virtual key creation via LiteLLM Admin API wrapper in `lib/litellm-admin.ts`
-- [ ] 10.4 Test: create virtual key, send chat completion, verify budget tracking works
+- [x] 10.4 Test: create virtual key, send chat completion, verify budget tracking works
 
 ## 11. OpenWebUI Integration
 
 - [x] 11.1 Create `openwebui/user-attribution-function.py` — Filter Function that injects user_id, user_email, instance_id into request metadata
 - [x] 11.2 Create `scripts/deploy-function.ts` — script to deploy the attribution function to an OpenWebUI instance via admin API
 - [x] 11.3 Document OpenWebUI env var configuration: OPENAI_API_BASE_URLS, OPENAI_API_KEYS, ENABLE_SIGNUP=false, DATABASE_URL, WEBUI_SECRET_KEY, ENABLE_MODEL_FILTER
-- [ ] 11.4 Test: user chats in OpenWebUI → request reaches LiteLLM with user metadata → usage tracked correctly
+- [x] 11.4 Test: user chats in OpenWebUI → request reaches LiteLLM with user metadata → usage tracked correctly
 
 ## 12. Docker Compose Stack
 

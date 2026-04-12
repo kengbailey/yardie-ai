@@ -9,4 +9,4 @@
 - [x] 2.2 Run the updated deploy script against the test instance
 - [x] 2.3 Send a chat message in OpenWebUI
 - [x] 2.4 Query `LiteLLM_SpendLogs` and verify `end_user` contains the attributed string
-- [ ] 2.5 Commit the fix
+- [x] 2.5 Commit the fix
