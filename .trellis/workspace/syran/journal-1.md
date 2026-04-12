@@ -155,3 +155,61 @@ Built the full yardie.ai platform infrastructure in a single session. Went from 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Attribution, Usage Stats, Per-User Budgets
+
+**Date**: 2026-04-12
+**Task**: Attribution, Usage Stats, Per-User Budgets
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## Summary
+Fixed user attribution, wired dashboard to real data, and implemented per-user budget enforcement via LiteLLM's end_user system.
+
+## Changes (4 completed changes)
+
+| Change | What |
+|--------|------|
+| fix-user-attribution | Fixed OpenWebUI filter: body["metadata"] → body["user"] (OpenWebUI strips metadata) |
+| wire-usage-stats | Dashboard queries real LiteLLM_SpendLogs + end_user budget data |
+| wire-litellm-api-calls | Budget/model routes call LiteLLM Admin API, cleaned up TODOs |
+| per-user-budgets | LiteLLM end_user system for per-user budgets — no per-user virtual keys needed |
+
+## Key Discoveries
+- OpenWebUI strips non-standard fields from request body before forwarding to LLM backend
+- Portal user_id ≠ OpenWebUI user_id — email is the shared identifier across systems
+- LiteLLM end_user budgets eliminate the need for per-user virtual keys entirely
+- Simplified attribution from composite `id::email::instance` to just email
+
+## Architecture Simplification
+```
+BEFORE: Per-user virtual keys (not implemented, complex)
+AFTER:  Shared instance key + LiteLLM end_user budgets (simple, working)
+```
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9ef31f0` | (see git log) |
+| `c534710` | (see git log) |
+| `fb3f30a` | (see git log) |
+| `ff2838c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
